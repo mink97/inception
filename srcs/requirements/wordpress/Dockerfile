@@ -2,6 +2,13 @@ FROM alpine:3.18
 
 EXPOSE 9000
 
+RUN set -eux; \
+    deluser xfs 2> /dev/null && \
+    delgroup www-data 2> /dev/null && \
+    addgroup -g 33 www-data && \
+    adduser -s /bin/false -h /var/www -u 33 -G www-data -D www-data
+RUN mkdir -p /run/php
+
 RUN apk update && apk upgrade && \
     apk add --no-cache \
     curl \
@@ -13,28 +20,21 @@ RUN apk update && apk upgrade && \
     php81-pdo \
     php81-gd \
     php81-mbstring \
+    php81-json \
     wget && \
     rm -rf /var/cache/apk/*
 
-# ensure www-data user exists
-RUN set -eux; \
-    adduser -u 82 -D -S -G www-data www-data
-
-COPY ./conf/www.conf /etc/php81/php-fpm.d/
-COPY ./tools/init.sh /usr/local/bin/
-
-# install wp-cli
-# 파일을 링크를 통해 다운받을까 아니면 프로그램을 그냥 저장해놓을까
-RUN curl -O https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar
-RUN chmod +x wp-cli.phar
-RUN mv wp-cli.phar /usr/bin/wp
-
+COPY ./conf/www.conf /etc/php81/php-fpm.d/www.conf
+COPY ./tools/init.sh /usr/local/bin/init.sh
 RUN chmod +x /usr/local/bin/init.sh
 
-RUN mkdir /run/php
+# install wp-cli
+RUN curl -O https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar && \
+    chmod +x wp-cli.phar && \
+    mv wp-cli.phar /usr/local/bin/wp
 
 WORKDIR /var/www/html/
 
 ENTRYPOINT [ "init.sh" ]
 
-CMD [ "php-fpm81", "-F", "-R" ]
+CMD [ "php-fpm81", "-F" ]

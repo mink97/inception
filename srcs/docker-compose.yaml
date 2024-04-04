@@ -1,62 +1,61 @@
 volumes:
-    DB:
-        driver: local
-        driver_opts:
-            type: none
-            device: data/mariadb
-            o: bind
-    WordPress:
-        driver: local
-        driver_opts:
-            type: none
-            device: data/wordpress
-            o: bind
+  DB:
+    driver: local
+    driver_opts:
+      type: none
+      device: /home/mingkang/data/mariadb
+      o: bind
+  WP:
+    driver: local
+    driver_opts:
+      type: none
+      device: /home/mingkang/data/wordpress
+      o: bind
 
 services:
-    mariadb:
-        container_name: mariadb
-        build: ./requirements/mariadb
-        image: mariadb
-        expose:
-            - "3306"
-        volumes:
-            - DB:/var/lib/mysql
-        networks:
-            - mingkang_net
-        env_file:
-            - ./.env
-        restart: always
-    nginx:
-        container_name: nginx
-        build:
-            context: ./requirements/nginx
-            dockerfile: Dockerfile
-        restart: always
-        ports:
-            - "443:443"
-        volumes:
-            - "WordPress:/var/www/html"
-        networks:
-            - mingkang_net
-        depends_on:
-            - wordpress
-        tty: true
-
-    wordpress:
-        container_name: wordpress
-        depends_on:
-            - mariadb
-        build: ./requirements/wordpress
-        expose:
-            - "9000"
-        volumes:
-            - WordPress:/var/www/html
-        networks:
-            - mingkang_net
-        env_file:
-            - ./.env
-        restart: always
-        tty: true
+  mariadb:
+    build: ./requirements/mariadb
+    image: mariadb
+    container_name: mariadb
+    expose:
+      - "3306"
+    volumes:
+      - DB:/var/lib/mysql
+    networks:
+      - mingkangnet
+    env_file:
+      - ./.env
+    restart: always
+  wordpress:
+    build: ./requirements/wordpress
+    image: wordpress
+    container_name: wordpress
+    expose:
+      - "9000"
+    volumes:
+      - WP:/var/www/html
+    networks:
+      - mingkangnet
+    env_file:
+      - ./.env
+    restart: always
+    tty: true
+    depends_on:
+      - mariadb
+  nginx:
+    build: ./requirements/nginx
+    image: nginx
+    container_name: nginx
+    ports:
+      - "443:443"
+    volumes:
+      - WP:/var/www/html
+    networks:
+      - mingkangnet
+    restart: always
+    tty: true
+    depends_on:
+      - wordpress
 networks:
-    mingkang_net:
-        driver: bridge
+  mingkangnet:
+    driver: bridge
