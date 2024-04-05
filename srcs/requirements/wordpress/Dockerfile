@@ -11,6 +11,7 @@ RUN mkdir -p /run/php
 
 RUN apk update && apk upgrade && \
     apk add --no-cache \
+    dumb-init \
     curl \
     php81 \
     php81-phar \
@@ -35,6 +36,6 @@ RUN curl -O https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli
 
 WORKDIR /var/www/html/
 
-ENTRYPOINT [ "init.sh" ]
+ENTRYPOINT [ "/usr/bin/dumb-init","--", "init.sh" ]
 
 CMD [ "php-fpm81", "-F" ]
