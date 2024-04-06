@@ -6,7 +6,6 @@ if [ -f /var/www/html/wp-config.php ]; then
 else
 	echo "download wordpress"
 	wp core download --path=/var/www/html
-	chown -R www-data:www-data /var/www/html
 
 	# config 파일 생성
 	wp config create --dbname="$MARIADB_DATABASE" \
@@ -26,6 +25,7 @@ else
 	if ! wp user list --field=ID | wc -l | grep 2; then
 		wp user create "$WP_USER" "$WP_USER_EMAIL" --user_pass="$WP_USER_PASSWORD"
 	fi
+	chown -R www-data:www-data /var/www/html
 fi
 
 exec "$@"
